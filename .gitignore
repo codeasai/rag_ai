@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.class
+
+# Virtual Environment
+venv/
+env/
+
+# Models and data
+models/
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.ckpt
+vectorstore/
+
+# Data
+data/
+logs/
+
+# IDE
+.idea/
+.vscode/

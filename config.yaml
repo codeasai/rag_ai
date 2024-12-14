@@ -1,0 +1,13 @@
+data:
+  pdf_dir: "data/raw_pdfs"      # โฟลเดอร์สำหรับเก็บไฟล์ PDF ต้นฉบับ
+  processed_dir: "data/processed"  # โฟลเดอร์สำหรับเก็บข้อมูลที่ประมวลผลแล้ว
+
+model:
+  name: "bert-base-multilingual-cased"  # โมเดลที่ใช้
+  epochs: 3
+  batch_size: 16
+training:
+  learning_rate: 2e-5
+
+model_dir: "models"  # โฟลเดอร์สำหรับเก็บโมเดลที่เทรนแล้ว
+log_dir: "logs"      # โฟลเดอร์สำหรับเก็บ log files 
