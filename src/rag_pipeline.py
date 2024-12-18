@@ -4,52 +4,36 @@ os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 os.environ['HF_HUB_DISABLE_SYMLINKS_WARNING'] = '1'
 os.environ["TRANSFORMERS_OFFLINE"] = "1"
 
+from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_community.llms import HuggingFacePipeline
 from langchain.chains import RetrievalQA
-from langchain_huggingface import HuggingFaceEmbeddings, HuggingFacePipeline
-from langchain_community.vectorstores import FAISS
-from transformers import pipeline
-import torch
+from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
 def create_rag_pipeline(vectorstore):
-    retriever = vectorstore.as_retriever(
-        search_type="similarity",
-        search_kwargs={"k": 3}
-    )
+    """สร้าง RAG pipeline"""
+    # สร้าง LLM pipeline
+    model_name = "bert-base-multilingual-cased"  # หรือโมเดลอื่นที่ต้องการใช้
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    model = AutoModelForCausalLM.from_pretrained(model_name)
     
-    print("กำลังโหลดโมเดลและ tokenizer...")
-    model_name = "google/flan-t5-small"
-    
-    # สร้าง pipeline โดยตรงจาก transformers พร้อมตั้งค่าที่เหมาะสม
-    pipe = pipeline(
-        "text2text-generation",
-        model=model_name,
-        tokenizer=model_name,
+    llm_pipeline = pipeline(
+        "text-generation",
+        model=model,
+        tokenizer=tokenizer,
         max_length=512,
-        do_sample=True,  # เปิดใช้งาน sampling
-        temperature=0.7,
-        top_p=0.9,
-        device="cpu",
-        model_kwargs={
-            "torch_dtype": torch.float32
-        }
+        temperature=0.7
     )
     
-    # แปลง pipeline เป็น LangChain LLM
-    llm = HuggingFacePipeline(
-        pipeline=pipe,
-        model_kwargs={"temperature": 0.7}
-    )
+    llm = HuggingFacePipeline(pipeline=llm_pipeline)
     
-    print("กำลังสร้าง QA chain...")
+    # สร้าง QA chain
     qa_chain = RetrievalQA.from_chain_type(
         llm=llm,
         chain_type="stuff",
-        retriever=retriever,
-        return_source_documents=True,
-        verbose=True
+        retriever=vectorstore.as_retriever(),
+        return_source_documents=True
     )
     
-    print("สร้าง RAG pipeline เสร็จสมบูรณ์")
     return qa_chain
 
 if __name__ == "__main__":
@@ -73,7 +57,7 @@ if __name__ == "__main__":
         print(f"\nคำตอบ: {result['result']}")
         print("\nแหล่งข้อมูล:")
         for doc in result['source_documents']:
-            print(f"- {doc.metadata.get('source', 'ไม่ระบุแหล่งท��่มา')}")
+            print(f"- {doc.metadata.get('source', 'ไม่ระบุแหล่งท่มา')}")
     except Exception as e:
         print(f"เกิดข้อผิดพลาด: {str(e)}")
         print("คำตอบ: ไม่สามารถประมวลผลคำถามได้")
